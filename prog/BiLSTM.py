@@ -159,29 +159,37 @@ def training_biLSTM(Xtrain, Ytrain, Xtest, Ytest, embeddings_index, tknzr, model
                     tri_grams = [word.lower()[i:i+3] for i in range(len(word.lower())-1)]
                     for gram in tri_grams:
                         if len(gram) == 3:
-                            if gram.lower() in word_embeds:
-                                list_of_embeddings.append(word_embeds[gram.lower()])
+                            embedding_vector = embeddings_index.get(gram.lower())
+                            if embedding_vector is not None:
+                                embedding_matrix[i] = embedding_vector
+                                break
                 
-                if len(word) > 4:
+                elif len(word) > 4:
                     tri_grams = [word.lower()[i:i+4] for i in range(len(word.lower())-1)]
                     for gram in tri_grams:
                         if len(gram) == 4:
-                            if gram.lower() in word_embeds:
-                                list_of_embeddings.append(word_embeds[gram.lower()])
+                            embedding_vector = embeddings_index.get(gram.lower())
+                            if embedding_vector is not None:
+                                embedding_matrix[i] = embedding_vector
+                                break
                 
-                if len(word) > 5:
+                elif len(word) > 5:
                     tri_grams = [word.lower()[i:i+5] for i in range(len(word.lower())-1)]
                     for gram in tri_grams:
                         if len(gram) == 5:
-                            if gram.lower() in word_embeds:
-                                list_of_embeddings.append(word_embeds[gram.lower()])
+                            embedding_vector = embeddings_index.get(gram.lower())
+                            if embedding_vector is not None:
+                                embedding_matrix[i] = embedding_vector
+                                break
                 
-                if len(word) > 6:
+                elif len(word) > 6:
                     tri_grams = [word.lower()[i:i+6] for i in range(len(word.lower())-1)]
                     for gram in tri_grams:
                         if len(gram) == 6:
-                            if gram.lower() in word_embeds:
-                                list_of_embeddings.append(word_embeds[gram.lower()])
+                            embedding_vector = embeddings_index.get(gram.lower())
+                            if embedding_vector is not None:
+                                embedding_matrix[i] = embedding_vector
+                                break
                                     
     print('Loaded embeddings')
 
