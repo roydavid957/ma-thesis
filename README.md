@@ -14,4 +14,4 @@ features.py: contains features used in SVM_original.py. (Original version: https
 
 transformers.py: containes features used in SVM_original.py. (Original version: https://github.com/malvinanissim/germeval-rug)  (Version used and modified: https://github.com/BalintHompot/RUG_Offenseval)
 
-BiLSTM.py: contains the BiLSTM model using embeddings. (Original version:)
+BiLSTM.py: contains the BiLSTM model using embeddings. (Original version: https://bitbucket.org/grunn2018/sharedhate_repo/src/master/)
