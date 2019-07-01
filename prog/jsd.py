@@ -75,13 +75,38 @@ def jensen_shannon_divergence(repr1, repr2):
         return 0
     return sim
 
-
-
-if __name__ == '__main__':
-    
+def get_f(trainPath):
+    """ get the correspnding Xs for the data sets """
     TASK = 'binary'
     cls = None
     reverse = None
+    dataSet = None
+    testPath = None
+    f = ''
+    
+    if trainPath.split("/")[-1] == 'Full_Tweets_June2016_Dataset.csv':
+        dataSet = 'WaseemHovy'
+    if trainPath.split("/")[-1] == 'olid-training-v1.0.tsv':
+        dataSet = 'offenseval'
+        testPath = ("/").join(trainPath.split("/")[:-1])+'/testset-levela.tsv'
+    if trainPath.split("/")[-1] == 'train_en.tsv':
+        dataSet = 'standard'
+        testPath = ("/").join(trainPath.split("/")[:-1])+'/test_en.tsv'
+
+    if dataSet != None:
+        IDsTrain, Xtrain, Ytrain, IDsTest, Xtest, Ytest = helperFunctions.loaddata(dataSet, trainPath, testPath, cls, TASK, reverse)
+
+    if trainPath.split("/")[-1] == 'offensive.csv':
+        IDsTrain,Xtrain,Ytrain = helperFunctions.read_corpus_stackoverflow(trainPath,cls)
+
+    if testPath != None:
+        Xtrain = Xtrain+Xtest
+    for line in Xtrain:
+        line = line.strip('\n')
+        f += ' ' + line
+    return f
+
+if __name__ == '__main__':
 
     """
     Usage python2 jsd.py [INPUT_DOC1] [INPUT_DOC2]
@@ -97,55 +122,8 @@ if __name__ == '__main__':
     in1 = d1.split("/")[-1]
     in2 = d2.split("/")[-1]
 
-    f1 = ''
-    dataSet = 'WaseemHovy'
-    trainPath = sys.argv[1]
-    testPath = None
-    IDsTrain, Xtrain, Ytrain, IDsTest, Xtest, Ytest = helperFunctions.loaddata(dataSet, trainPath, testPath, cls, TASK, reverse)
-    if testPath != None:
-        Xtrain = Xtrain+Xtest
-    for line in Xtrain:
-        line = line.strip('\n')
-        f1 += ' ' + line
-
-#    ids = []
-#    with open('../data/OLIDv1.0/olid-training-v1.0.tsv', 'r') as fi:
-#        for line in fi:
-##            if line.split('\t')[2].strip('\n') == 'OFF':
-#            line = line.split('\t')[1].strip('\n')
-#            f1 += ' ' + line
-#    with open('../data/OLIDv1.0/labels-levela.csv', 'r') as fi:
-#        for line in fi:
-#            if line.split(',')[1].strip('\n') == 'OFF':
-#                ids.append(line.split(',')[0].strip('\n'))
-#    with open('../data/OLIDv1.0/testset-levela.tsv', 'r') as fi:
-#        for line in fi:
-#            if line.split('\t')[0].strip('\n') in ids:
-##            line = line.split('\t')[1].strip('\n')
-#            f1 += ' ' + line
-
-    f2 = ''
-    dataSet = 'offenseval'
-    trainPath = sys.argv[2]
-    testPath = ('/').join(sys.argv[2].split('/')[:-1])+'/testset-levela.tsv'
-    IDsTrain, Xtrain, Ytrain, IDsTest, Xtest, Ytest = helperFunctions.loaddata(dataSet, trainPath, testPath, cls, TASK, reverse)
-    if testPath != None:
-        Xtrain = Xtrain+Xtest
-    for line in Xtrain:
-        line = line.strip('\n')
-        f2 += ' ' + line
-#    with open('../data/public_development_en/train_en.tsv', 'r') as fi:
-#        for line in fi:
-#            line = line.split('\t')[1].strip('\n')
-#            f2 += ' ' + line
-#    with open('../data/public_development_en/dev_en.tsv', 'r') as fi:
-#        for line in fi:
-#            line = line.split('\t')[1].strip('\n')
-#            f2 += ' ' + line
-#    with open('../data/public_development_en/test_en.tsv', 'r') as fi:
-#        for line in fi:
-#            line = line.split('\t')[1].strip('\n')
-#            f2 += ' ' + line
+    f1 = get_f(d1)
+    f2 = get_f(d2)
 
     kldiv(tokenize(d1), tokenize(d2))
 

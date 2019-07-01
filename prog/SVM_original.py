@@ -1,72 +1,7 @@
 '''
-SVM systems for germeval, modified for English data from twitter and reddit, with crossvalidation and no test phase
+SVM systems for ALW, modified for English data from twitter and reddit, with crossvalidation and no test phase
 original by Caselli et al: https://github.com/malvinanissim/germeval-rug
 '''
-#### PARAMS #############################################
-# source = 'Twitter'      ## options: Twitter, Reddit - Leon: I applied this on semeval&waseem
-# source = 'Reddit'       #Leon: I applied this on wikimedia
-# source = ''
-
-# ftr = 'ngram'
-# ftr = 'embeddings'
-# ftr = 'embeddings+ngram'
-
-# cls = 'bilstm'
-# cls = ''
-
-# dataSet = 'other_waseem_standardVSwikimedia'
-# dataSet = 'other_waseem_wikimediaVSstandard'
-# dataSet = 'other_standard_wikimediaVSwaseem'
-# dataSet = 'waseem_standard_wikimediaVSother'
-# dataSet = 'waseem_standard_wikimedia_otherVSstackoverflow'
-# dataSet = 'waseem_standard_wikimedia_otherVSstandardTest_otherTest'
-
-# dataSet = 'other' #cyberbullying
-# dataSet = 'standard'  #Hatespeech 1/0
-# dataSet = 'WaseemHovy'    #racism/sexism
-# dataSet = 'wikimedia' #
-
-# modelh5 = 'models/B2_model.h5'            #reddit_general + semeval
-# modelh5 = 'models/B3_model.h5'          #reddit_polarised + semeval
-# modelh5 = 'models/B4_model.h5'          #twitter_glove + semeval
-# modelh5 = 'models/B5_model.h5'          #twitter_polarised_2016 + semeval
-# modelh5 = 'models/CVWaseem_reddit_general_ruby_weights-improvement-{epoch:02d}-{loss:.2f}.h5'
-# modelh5 = 'models/CVWaseem_reddit_polarised_ruby_weights-improvement-{epoch:02d}-{loss:.2f}.h5'
-# modelh5 = 'models/CVWaseem_twitter_polarised_2016_weights-improvement-{epoch:02d}-{loss:.2f}.h5'
-# modelh5 = 'models/CVWaseem_glove_twitter_weights-improvement-{epoch:02d}-{loss:.2f}.h5'
-
-# modelh5 = 'models/CVWikimedia_reddit_general_ruby_weights-improvement-{epoch:02d}-{loss:.2f}.h5'
-# modelh5 = 'models/CVWikimedia_reddit_polarised_ruby_weights-improvement-{epoch:02d}-{loss:.2f}.h5'
-# modelh5 = 'models/CVWikimedia_twitter_polarised_2016_weights-improvement-{epoch:02d}-{loss:.2f}.h5'
-# modelh5 = 'models/CVWikimedia_glove_twitter_weights-improvement-{epoch:02d}-{loss:.2f}.h5'
-
-# tknzr = 'models/B2_tokenizer.pickle'    #reddit_general + semeval
-# tknzr = 'models/B3_tokenizer.pickle'  #reddit_polarised + semeval
-# tknzr = 'models/B4_tokenizer.pickle'  #twitter_glove + semeval
-# tknzr = 'models/B5_tokenizer.pickle'  #twitter_polarised_2016 + semeval
-# tknzr = 'models/CVWaseem_tokenizer.pickle'
-# tknzr = 'models/CVWikimedia_tokenizer.pickle'
-
-# trainPath = '../../Full_Tweets_June2016_Dataset.csv'          # WaseemHovy - waseemhovy
-# trainPath = '../../4563973/toxicity_annotated_comments.tsv'     # Wikimedia toxicity_annotated_comments
-# trainPath = '../../public_development_en/train_en.tsv'        # SemEval - standard
-# trainPath = '../../english/agr_en_train.csv'                    # Facebook english - other
-
-# testPath = ''
-# testPath = '../../public_development_en/dev_en.tsv'         # SemEval - standard
-# testPath = '../../english/agr_en_dev.csv'                    # Facebook english - other
-
-# path_to_embs = '../../embeddings/reddit_general_ruby.txt'
-# path_to_embs = '../../embeddings/reddit_polarised_ruby.txt'
-# path_to_embs = '../../embeddings/twitter_polarised_2016.txt'
-# path_to_embs = '../../embeddings/glove.twitter.27B.200d.txt'
-
-# evlt = 'cv10'
-# evlt = 'traintest'
-
-# clean = 'none'
-# clean = 'std'     # PPsmall
-# clean = 'ruby'    # PPbig
 
 glove_embeds_path = '../../embeddings/glove.twitter.27B.200d.txt'
 
@@ -127,12 +62,10 @@ def ntlktokenizer(x):
     return ' '.join(tokens)
 
 def main():
-#def main(ftr, clean, path_to_embs):
-# python3 SVM_original.py -src '' -ftr 'embeddings' -cls 'bilstm' -ds 'WaseemHovy' -mh5 'models/CVWaseem_reddit_general_ruby_weights-improvement-{epoch:02d}-{loss:.2f}.h5' -tknzr 'models/CVWaseem_tokenizer.pickle' -trnp '../../Full_Tweets_June2016_Dataset.csv' -tstp '' -pte '../../embeddings/reddit_general_ruby.txt' -evlt '' -cln 'none'
 
     parser = argparse.ArgumentParser(description='ALW')
-    parser.add_argument('-src', type=str, default='Twitter', help='Twitter/Reddit')
-    parser.add_argument('-ftr', type=str, help='knn/vocab/ngram/embeddings/embeddings+ngram')
+    parser.add_argument('-src', type=str, default='Twitter', help='Twitter')
+    parser.add_argument('-ftr', type=str, help='knn/vocab/mif/ngram/embeddings/embeddings+ngram')
     parser.add_argument('-cls', type=str, help='bilstm/none')
     parser.add_argument('-ds', type=str, help='WaseemHovy/standard/offenseval/cross')
     parser.add_argument('-mh5', type=str, help='modelh5')
@@ -155,19 +88,20 @@ def main():
     parser.add_argument('-cnct', type=helperFunctions.str2bool, default=helperFunctions.str2bool('False'), help='concat')
     parser.add_argument('-pool', type=str, default='max', help='pool max/average/concat')
     parser.add_argument('-nrange', type=str, default='None', help='3to3/3to6/none')
+    parser.add_argument('-pte2', type=str, default='', help='path_to_embs2')
     args = parser.parse_args()
 
     source = args.src
-    ftr = args.ftr            # LET OP: uitzetten als je main 9x aanroept
+    ftr = args.ftr
     cls = args.cls
     dataSet = args.ds
     modelh5 = args.mh5
     tknzr = args.tknzr
     trainPath = args.trnp
     testPath = args.tstp
-    path_to_embs = args.pte   # LET OP: uitzetten als je main 9x aanroept
+    path_to_embs = args.pte
     evlt = args.evlt
-    clean = args.cln          # LET OP: uitzetten als je main 9x aanroept
+    clean = args.cln
     lstmTraining = args.lstmTrn
     lstmOutput = args.lstmOp
     lstmTrainDev = args.lstmTd
@@ -181,6 +115,7 @@ def main():
     concat = args.cnct
     pool = args.pool
     nrange = args.nrange
+    path_to_embs2 = args.pte2
 
     TASK = 'binary'
     #TASK = 'multi'
@@ -251,6 +186,13 @@ def main():
         print("overlap: {} %".format(float(((len(set(vocab_data) & set(vocab))) / len(vocab_data)) * 100)))
         exit()
 
+    if ftr == 'mif':
+        print("Top 10 1-2 word n-grams features for Xtrain from:", dataSet)
+        print(transformers.frequencyFilter.getKMostImportantToken(transformers.frequencyFilter(10, path_to_embs, 'word', 1, 2), Xtrain))
+        print("Top 10 3-7 char n-grams features for Xtrain from:", dataSet)
+        print(transformers.frequencyFilter.getKMostImportantToken(transformers.frequencyFilter(10, path_to_embs, 'char', 3, 7), Xtrain))
+        exit()
+
     if ftr == 'ngram':
         count_word = CountVectorizer(ngram_range=(1,2), stop_words=stop_words.get_stop_words('en'), tokenizer=tokenizer)
         count_char = CountVectorizer(analyzer='char', ngram_range=(3,7))
@@ -266,6 +208,10 @@ def main():
     elif ftr == 'embeddings':
         # print('Getting pretrained word embeddings from {}...'.format(path_to_embs))
         embeddings, vocab = helperFunctions.load_embeddings(path_to_embs)
+        if path_to_embs2 != '':
+            embeddings2, vocab2 = helperFunctions.load_embeddings(path_to_embs2)
+        else:
+            embeddings2 = {}
         glove_embeds = {}
         if concat:
             if path_to_embs == glove_embeds_path:
@@ -304,7 +250,7 @@ def main():
         print('Train labels', set(Ytrain), len(Ytrain))
         print('Test labels', set(Ytest), len(Ytest))
         print(cls)
-        Ytest, Yguess = biLSTM(Xtrain, Ytrain, Xtest, Ytest, lstmTraining, lstmOutput, embeddings, tknzr, modelh5, lstmCV, lstmEps, lstmPtc, dataSet, vb, bs, prob, path_to_embs, nrange)
+        Ytest, Yguess = biLSTM(Xtrain, Ytrain, Xtest, Ytest, lstmTraining, lstmOutput, embeddings, tknzr, modelh5, lstmCV, lstmEps, lstmPtc, dataSet, vb, bs, prob, path_to_embs, nrange, path_to_embs2, embeddings2)
 
 
     # Set up SVM classifier with unbalanced class weights
@@ -355,6 +301,8 @@ def main():
             Y_train, Y_test = Ytrain[train_index], Ytrain[test_index]
 
             classifier.fit(X_train,Y_train)
+            if ftr == 'ngram':
+                helperFunctions.print_top10(vectorizer, clf, clf.classes_)
             Yguess = classifier.predict(X_test)
 
             accuracy += accuracy_score(Y_test, Yguess)
@@ -403,6 +351,8 @@ def main():
     elif evlt == 'traintest':
         if cls != 'bilstm':
             classifier.fit(Xtrain,Ytrain)
+            if ftr == 'ngram':
+                helperFunctions.print_top10(vectorizer, clf, clf.classes_)
             Yguess = classifier.predict(Xtest)
 #            print(classifier.show_most_informative_features(20))
         print('train test results:')
@@ -426,18 +376,4 @@ def main():
         # print(Yguess)
 
 if __name__ == '__main__':
-    main() # LET OP: uitzetten als je main 9x aanroept
-    # main('ngram', 'none', '../../embeddings/reddit_general_ruby.txt')
-
-#    main('embeddings', 'ruby', '../../embeddings/reddit_general_ruby.txt')
-#    main('embeddings', 'ruby', '../../embeddings/reddit_polarised_ruby.txt')
-#    main('embeddings', 'ruby', '../../embeddings/twitter_polarised_2016.txt')
-#    main('embeddings', 'ruby', '../../embeddings/glove.twitter.27B.200d.txt')
-
-    # main('embeddings+ngram', 'ruby', '../../embeddings/reddit_general_ruby.txt')
-    # main('embeddings+ngram', 'ruby', '../../embeddings/reddit_polarised_ruby.txt')
-    # main('embeddings+ngram', 'ruby', '../../embeddings/twitter_polarised_2016.txt')
-    # main('embeddings+ngram', 'ruby', '../../embeddings/glove.twitter.27B.200d.txt')
-
-
-    #######
+    main()

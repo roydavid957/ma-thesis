@@ -55,13 +55,12 @@ class Embeddings(TransformerMixin):
         list_of_embeddings = [word_embeds[word.lower()] for word in sentence.split() if word.lower() in word_embeds]
 
         list_of_embeddings = []
-#        sentence = "groningen clanz gangs whatsup"
         for word in sentence.split():
             if word.lower() in word_embeds:
                 list_of_embeddings.append(word_embeds[word.lower()])
             elif word.lower() in glove_embeds:
                 list_of_embeddings.append(glove_embeds[word.lower()])
-            
+            # additional look up for subword vectors
             if nrange == '3to3':
                 if word.lower() not in word_embeds and pte.split('/')[-1] == pte.split('/')[-1] == 'twitter-pol-300d-200k.vec' or pte.split('/')[-1] == 'wiki-news-300d-1M-subword.vec':
                     if len(word) > 3:

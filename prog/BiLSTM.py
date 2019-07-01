@@ -109,7 +109,7 @@ class AttentionWithContext(Layer):
 
 
 
-def training_biLSTM(Xtrain, Ytrain, Xtest, Ytest, embeddings_index, tknzr, modelh5, eps, ptc, vb, bs, cv, c, pte, nrange):
+def training_biLSTM(Xtrain, Ytrain, Xtest, Ytest, embeddings_index, tknzr, modelh5, eps, ptc, vb, bs, cv, c, pte, nrange, pte2, embeddings_index2):
     if cv:
         tknzr = tknzr.rstrip('.pickle') + '_CV_' + str(c) + '.pickle'
         modelh5 = modelh5.rstrip('.mh5') + '_CV_' + str(c) + '.mh5'
@@ -128,17 +128,36 @@ def training_biLSTM(Xtrain, Ytrain, Xtest, Ytest, embeddings_index, tknzr, model
     print('Padded the data')
 
     ## Loading in word embeddings and setting up matrix
-    print('Loaded %s word vectors' % len(embeddings_index))
-    if pte.split('/')[-1] == 'glove.twitter.27B.200d.txt':
-        dim = 200
+    if pte2 == '':
+        print('Loaded %s word vectors' % len(embeddings_index))
+        l_vector = len(embeddings_index['a'])
+        embedding_matrix = np.zeros((vocab_size, l_vector)) #Dimension vector in embeddings
+        for word, i in t.word_index.items():
+            embedding_vector = embeddings_index.get(word)
+            if embedding_vector is not None:
+                embedding_matrix[i] = embedding_vector
     else:
-        dim = 300
-    embedding_matrix = np.zeros((vocab_size, dim)) #Dimension vector in embeddings
-    for word, i in t.word_index.items():
-        embedding_vector = embeddings_index.get(word)
-        if embedding_vector is not None:
-            embedding_matrix[i] = embedding_vector
-        
+        print('Stacking embeddings:',pte.split('/')[-1],pte2.split('/')[-1])
+        l_vector = len(embeddings_index['a']) + len(embeddings_index2['a'])  #Stacking embeddings
+        embedding_matrix = np.zeros((vocab_size, l_vector))                  #Dimension vector in embeddings
+        for word, i in t.word_index.items():
+            embedding_vector1 = embeddings_index.get(word)
+            embedding_vector2 = embeddings_index.get(word)
+            if embedding_vector1 is None and embedding_vector2 is not None:
+                embedding_vector1 = [0.00] * l_vector
+            if embedding_vector2 is None and embedding_vector1 is not None:
+                embedding_vector2 = [0.00] * l_vector
+            try:
+                embedding_vector = np.hstack((embedding_vector1, embedding_vector2))
+            except:
+                pass
+            try:
+                if embedding_vector is not None and len(embedding_vector) == l_vector:
+                    embedding_matrix[i] = embedding_vector
+            except:
+                pass
+# for additional look up for subword vectors
+    """
         if embedding_vector is None:
         
             if nrange == '3to3':
@@ -190,12 +209,12 @@ def training_biLSTM(Xtrain, Ytrain, Xtest, Ytest, embeddings_index, tknzr, model
                             if embedding_vector is not None:
                                 embedding_matrix[i] = embedding_vector
                                 break
-                                    
+    """
     print('Loaded embeddings')
 
     ### Setting up model
     print('Setting up model..')
-    embedding_layer = Embedding(vocab_size, dim, weights=[embedding_matrix], input_length=max_length, trainable=False, mask_zero=True)
+    embedding_layer = Embedding(vocab_size, l_vector, weights=[embedding_matrix], input_length=max_length, trainable=False, mask_zero=True)
     sequence_input = Input(shape=(max_length,), dtype='int32')
     embedded_sequences = embedding_layer(sequence_input)
     l_lstm = Bidirectional(LSTM(512, return_sequences=True))(embedded_sequences)
@@ -304,9 +323,9 @@ def output_biLSTM(Xtrain, Ytrain, Xtest, Ytest, tknzr, modelh5, cv, c):
         return Ytest, yguess
 
 
-def biLSTM(Xtrain, Ytrain, Xtest, Ytest, training, output, embeddings_index, tknzr, modelh5, cv, eps, ptc, ds, vb, bs, prob, pte, nrange):
+def biLSTM(Xtrain, Ytrain, Xtest, Ytest, training, output, embeddings_index, tknzr, modelh5, cv, eps, ptc, ds, vb, bs, prob, pte, nrange, pte2, embeddings_index2):
     if training:
-        training_biLSTM(Xtrain, Ytrain, Xtest, Ytest, embeddings_index, tknzr, modelh5, eps, ptc, vb, bs, cv, 0, pte, nrange)
+        training_biLSTM(Xtrain, Ytrain, Xtest, Ytest, embeddings_index, tknzr, modelh5, eps, ptc, vb, bs, cv, 0, pte, nrange, pte2, embeddings_index2)
         print('Done training')
 
     if cv:
@@ -330,7 +349,7 @@ def biLSTM(Xtrain, Ytrain, Xtest, Ytest, training, output, embeddings_index, tkn
             print('X_train {}, X_test {}'.format(len(X_train), len(X_test)))
             print('Y_train {}, Y_test {}'.format(len(Y_train), len(Y_test)))
 
-            training_biLSTM(X_train.tolist(), Y_train.tolist(), X_test.tolist(), Y_test.tolist(), embeddings_index, tknzr, modelh5, eps, ptc, vb, bs, cv, c, pte, nrange)
+            training_biLSTM(X_train.tolist(), Y_train.tolist(), X_test.tolist(), Y_test.tolist(), embeddings_index, tknzr, modelh5, eps, ptc, vb, bs, cv, c, pte, nrange, pte2, embeddings_index2)
             print('CV: {} - Done training'.format(str(c)))
 
             notp, notr, notf1, offp, offr, off1 = output_biLSTM(X_train.tolist(), Y_train.tolist(), X_test.tolist(), Y_test.tolist(), tknzr, modelh5, cv, c)

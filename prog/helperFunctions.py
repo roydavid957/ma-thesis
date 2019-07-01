@@ -1,4 +1,3 @@
-# stackoverflow_path = '/data/s2548798/Leon/stackoverflow/StackOverflow/stack_comments.csv'
 
 import re
 import csv
@@ -18,6 +17,8 @@ import io
 import os
 import gensim
 from gensim.scripts.glove2word2vec import glove2word2vec
+
+""" file with useful small functions for SVM_original.py and BiLSTM.py """
 
 filename_dict = {
     'train_en.tsv': 1,
@@ -1097,6 +1098,16 @@ def evaluate(Ygold, Yguess):
 def mean(list):
     return sum(list)/len(list)
 
+def print_top10(vectorizer, clf, class_labels):
+    """Prints features with the highest coefficient values, per class"""
+    feature_names = vectorizer.get_feature_names()
+    for i, class_label in enumerate(class_labels):
+#        top10 = np.argsort(clf.coef_[i])[-10:]
+        top10 = np.argsort(clf.coef_[0])[-10:]
+#        top10 = np.argsort(clf.coef_)[-10:]
+        print("%s: %s" % (class_label,
+                          " ".join(feature_names[j] for j in top10)))
+
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True
@@ -1104,3 +1115,6 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
+#https://github.com/zalandoresearch/flair/blob/master/flair/embeddings.py

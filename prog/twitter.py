@@ -3,8 +3,6 @@
 # edited by: Roy David
 #
 # script for parsing scraped Tweets
-#module load Python/3.6.4-foss-2018a
-#scp -i /home/s2764989/.ssh/id_rsa s2764989@karora.let.rug.nl:/net/corpora/twitter2_en/Tweets/2016/05/* /data/s2764989/roy/tweets/05
 
 import os
 import re
@@ -18,9 +16,10 @@ import string
 import sys
 from gensim.models.fasttext import FastText as FT_gensim
 from gensim.test.utils import datapath
-
-# directory = '/Users/Leon/Downloads/test'
-# hashtags = open('txt_reddit_np.txt', 'r')
+import numpy as np
+import argparse
+seed = 1337
+np.random.seed(seed)
 
 def url_replacer(text):
     url = [r'http\S+', r'\S+https', r'\S+http']
@@ -61,6 +60,7 @@ def punct_replacer(text):
     return text
 
 def norm(corpus_file):
+    """ normalize tweet messages """
     uuh_list = ['<user>','<url>','<hashtag>']
 #    save_file = corpus_file.split('.txt.gz')[0]+'_'+'TWEETSpl.txt'
 #    print('writing to {}'.format(save_file))
@@ -70,31 +70,21 @@ def norm(corpus_file):
         for line in f:
             json_line = json.loads(line.strip('\n'))
             text = json_line['text']
-            print(text)
             text = text.lower()
-            print(text)
             text = url_replacer(text)
-            print(text)
             text = user_replacer(text)
-            print(text)
             text = hashtag_replacer(text)
-            print(text)
             text = text.replace('\n',' ').split()
-            print(text)
             try:
                 while text[-1] in uuh_list:
                     del text[-1]
             except:
                 pass
-            print(text)
             text = ' '.join(text)
-            print(text)
 #            text = punct_replacer(text)
-#            yield list(TweetTokenizer().tokenize(text))
+            yield list(TweetTokenizer().tokenize(text))
 
-            text = ' '.join(TweetTokenizer().tokenize(text))
-            print(text)
-            print()
+#            text = ' '.join(TweetTokenizer().tokenize(text))
 #            if text != '':
 #                f2.write(text+'\n')
 #    f2.close()
@@ -143,10 +133,11 @@ def gensim_ftm(corpus_file):
         most_sim = model_gensim.most_similar(most_sim_word)
         print(most_sim)
 
-def scraper(dir_path,hashtags):
-#    keywords = ['trump','Hillary','MAGA','realDonaldTrump','buildthewall','MakeAmericaGreatAgain','TrumpTrain','Trump2016','AmericaFirst','TrumpForPrison','TrumpLies','TrumpsArmy','Trumpstrong','ChristiansForTrump','WomenForTrump','DrainTheSwamp','HillaryClinton','pizzagate','ClintonEmails','ClintonCrimeFamily','HillaryForPrison','Hillary2016','CriminalClinton','NeverHillary','DonaldTrump','WomenWhoVoteTrump','dumptrump','VoteTrump','CrookedHillary','Women4Trump','Blacks4Trump','fucktrump']
+def scraper(dir_path):#,hashtags):
+    """ filter the tweets from karora based on requirements """
+    keywords = ['trump','Hillary','MAGA','realDonaldTrump','buildthewall','MakeAmericaGreatAgain','TrumpTrain','Trump2016','AmericaFirst','TrumpForPrison','TrumpLies','TrumpsArmy','Trumpstrong','ChristiansForTrump','WomenForTrump','DrainTheSwamp','HillaryClinton','pizzagate','ClintonEmails','ClintonCrimeFamily','HillaryForPrison','Hillary2016','CriminalClinton','NeverHillary','DonaldTrump','WomenWhoVoteTrump','dumptrump','VoteTrump','CrookedHillary','Women4Trump','Blacks4Trump','fucktrump']
 #    keywords = ['liberal','conservative','dems','democrat','DemocratsAreDestroyingAmerica','LiberalHypocrisy','LiberalismIsAMentalDisorder','republican','democrats','LiberalsAreFascists','WalkAwayFromDemocratsForever','SocialismKills','WalkAwayFromDemocrats','CriminalDemocrats','DemocratsAreThePartyOfSocialism','NeverDemocrat','nationalist','RepublicanParty',]
-    keywords = ['🇨🇦','🇬🇧','🇺🇸','🏳️‍🌈']
+#    keywords = ['🇨🇦','🇬🇧','🇺🇸','🏳️‍🌈']
     hashtags = []
     for word in keywords:
         hashtags.append(word.lower())
@@ -164,16 +155,7 @@ def scraper(dir_path,hashtags):
 
     directory = dir_path
 
-
-#    out_files = []
-#    if sys.argv[2] != '':
-#        with open(sys.argv[2], 'r') as op_file:
-#            for line in op_file:
-#                line = line.split('\t')
-#                out_files.append(line[0])
-#    p_file = open(sys.argv[1], 'w')
     p_file = gzip.open('../../../data/s2764989/roy/tweets/txt_twitter_p2_'+hashtags[0]+'_'+hashtags[1]+'_'+hashtags[2]+'_'+directory.split('/')[-1]+'.txt.gz', 'wt')
-    # np_file = open('txt_twitter_np.txt', 'w')
 #    feedback = open('txt_twitter_feedback2_'+hashtags[0]+'_'+hashtags[1]+'_'+hashtags[2]+'_'+directory.split('/')[-1]+'.txt', 'w')
 
     for root, dirs, files in os.walk(directory):
@@ -190,12 +172,12 @@ def scraper(dir_path,hashtags):
                     for line in f:
                         json_line = json.loads(line)
                         
-#                        text = json_line['text']
+                        text = json_line['text']
 #                        text = json_line['user']['name']
-                        text = json_line['user']['description']
+#                        text = json_line['user']['description']
 
-#                        if check_polarisation(text, hashtags):
-                        if check_flags(text, keywords):
+                        if check_polarisation(text, hashtags):
+#                        if check_flags(text, keywords):
                             # p_list.append(text)
                             json.dump(json_line,p_file)
                             p_file.write('\n')
@@ -216,7 +198,8 @@ def scraper(dir_path,hashtags):
 
     # print(p_list)
 
-def key_distr(corpus_file):
+def read_data(corpus_file):
+    """ count the distrinution of the keywords """
     keywords = ['trump','Hillary','MAGA','realDonaldTrump','buildthewall','MakeAmericaGreatAgain','TrumpTrain','Trump2016','AmericaFirst','TrumpForPrison','TrumpLies','TrumpsArmy','Trumpstrong','ChristiansForTrump','WomenForTrump','DrainTheSwamp','HillaryClinton','pizzagate','ClintonEmails','ClintonCrimeFamily','HillaryForPrison','Hillary2016','CriminalClinton','NeverHillary','DonaldTrump','WomenWhoVoteTrump','dumptrump','VoteTrump','CrookedHillary','Women4Trump','Blacks4Trump','fucktrump']
     hashtags = []
     for word in keywords:
@@ -243,36 +226,36 @@ def key_distr(corpus_file):
     [ print(key , " :: " , value) for (key, value) in sorted(hash_dict.items() , reverse=True, key=lambda x: x[1][1]  ) ]
     print("{:,}".format(c))
 
-def raw_token_cntr(corpus_file):
-    c = 0
-    tkn_cntr = 0
-    with gzip.open(corpus_file,'rt') as f:
-        print("Counting raw tokens in {}...".format(corpus_file.split('/')[-1]))
-        for line in f:
-            json_line = json.loads(line.strip('\n'))
-            text = json_line['text']
-            c+=1
-            text = word_tokenize(text)
-            tkn_cntr += len(text)
-    print("tweets {:,}".format(c))
-    print("raw tokens {:,}".format(tkn_cntr))
-
-def norm_token_cntr(corpus_file):
-    c = 0
-    tkn_cntr = 0
+def mix_data(corpus_file):
+    """ shuffle the data for reliability check of the embeddings purposes """
+    mixlist = []
     with open(corpus_file,'r') as f:
-        print("Counting norm tokens in {}...".format(corpus_file.split('/')[-1]))
         for line in f:
-            line = line.strip('\n')
-            c+=1
-            tkn_cntr += len(line.split())
-    print("tweets {:,}".format(c))
-    print("norm tokens {:,}".format(tkn_cntr))
+            line = line.strip("\n")
+            mixlist.append(line)
+    np.random.shuffle(mixlist)
+    fPath = corpus_file.split(".txt")[0] + "_v2.txt"
+    print("writing to "+fPath)
+    with open(fPath,'w') as f2:
+        for line in mixlist:
+            f2.write(line+"\n")
+    print("Done!")
 
 if __name__ == '__main__':
-#    scraper(sys.argv[1])
+    parser = argparse.ArgumentParser(description='Scrapes tweets, normalizes the messages, counts the distribution, shuffles the data')
+    parser.add_argument('-cmd', type=str, help='scrape/norm/count/mix')
+    parser.add_argument('-input', type=str, help='either directory path or corpus file path')
+    args = parser.parse_args()
+    
+    cmd = args.cmd
+    ip = args.input
+    
+    if cmd == 'scrape':
+        scraper(ip)
+    if cmd == 'norm':
 #    gensim_ftm(sys.argv[1])
-    norm(sys.argv[1])
-#    key_distr(sys.argv[1])
-#    raw_token_cntr(sys.argv[1])
-#    norm_token_cntr(sys.argv[1])
+        norm(ip)
+    if cmd == 'count':
+        read_data(ip)
+    if cmd == 'mix':
+        mix_data(ip)
