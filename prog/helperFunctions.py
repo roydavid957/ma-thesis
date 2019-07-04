@@ -1,3 +1,6 @@
+"""
+file containing useful, small functions for SVM_original.py and BiLSTM.py
+"""
 
 import re
 import csv
@@ -17,14 +20,6 @@ import io
 import os
 import gensim
 from gensim.scripts.glove2word2vec import glove2word2vec
-
-""" file with useful small functions for SVM_original.py and BiLSTM.py """
-
-filename_dict = {
-    'train_en.tsv': 1,
-        'dev_en.tsv': 2,
-            'test_en.tsv': 3,
-}
 
 def loaddata(dataSet, trainPath, testPath, cls, TASK):
     """ loads data set """
