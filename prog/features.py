@@ -60,7 +60,7 @@ class Embeddings(TransformerMixin):
                 list_of_embeddings.append(word_embeds[word.lower()])
             elif word.lower() in glove_embeds:
                 list_of_embeddings.append(glove_embeds[word.lower()])
-            # additional look up for subword vectors
+            # additional look up for subword vectors for out-of-vocab words: 3to3 first-, last 3 char; 3to6: all possible 3-6 char ngrams of an oov word
             if nrange == '3to3':
                 if word.lower() not in word_embeds and pte.split('/')[-1] == pte.split('/')[-1] == 'twitter-pol-300d-200k.vec' or pte.split('/')[-1] == 'wiki-news-300d-1M-subword.vec':
                     if len(word) > 3:

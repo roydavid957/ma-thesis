@@ -109,9 +109,9 @@ def get_f(trainPath):
 if __name__ == '__main__':
 
     """
-    Usage python2 jsd.py [INPUT_DOC1] [INPUT_DOC2]
+    Usage python3 jsd.py [INPUT_DOC1] [INPUT_DOC2]
 
-    It takes in input 2 .txt file (i.e. all the Xs of a dataset) and gives
+    It takes in input 2 .txt file (i.e. all the Xs of a dataset) or fixed filepaths and gives
     a score as output.     The script tokenize the data and remove stopwords.
     The input data must contains token strings not numbers.
     """
@@ -122,8 +122,14 @@ if __name__ == '__main__':
     in1 = d1.split("/")[-1]
     in2 = d2.split("/")[-1]
 
-    f1 = get_f(d1)
-    f2 = get_f(d2)
+    if in1 == 'Full_Tweets_June2016_Dataset.csv' or in1 == 'olid-training-v1.0.tsv' or in1 == 'train_en.tsv' or in1 == 'offensive.csv':
+        f1 = get_f(d1)
+    else:
+        f1 = d1
+    if in2 == 'Full_Tweets_June2016_Dataset.csv' or in2 == 'olid-training-v1.0.tsv' or in2 == 'train_en.tsv' or in2 == 'offensive.csv':
+        f2 = get_f(d2)
+    else:
+        f2 = d2
 
     kldiv(tokenize(d1), tokenize(d2))
 

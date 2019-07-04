@@ -1,9 +1,7 @@
 '''
-SVM systems for ALW, modified for English data from twitter and reddit, with crossvalidation and no test phase
+Main system for SVM systems and calling BiLSTM, modified for English data from twitter, with crossvalidation
 original by Caselli et al: https://github.com/malvinanissim/germeval-rug
 '''
-
-glove_embeds_path = '../../embeddings/glove.twitter.27B.200d.txt'
 
 #########################################################
 
@@ -63,35 +61,31 @@ def ntlktokenizer(x):
 
 def main():
 
-    parser = argparse.ArgumentParser(description='ALW')
-    parser.add_argument('-src', type=str, default='Twitter', help='Twitter')
-    parser.add_argument('-ftr', type=str, help='knn/vocab/mif/ngram/embeddings/embeddings+ngram')
-    parser.add_argument('-cls', type=str, help='bilstm/none')
-    parser.add_argument('-ds', type=str, help='WaseemHovy/standard/offenseval/cross')
-    parser.add_argument('-mh5', type=str, help='modelh5')
-    parser.add_argument('-tknzr', type=str, help='tknzr')
+    parser = argparse.ArgumentParser(description='ma-thesis IK')
+    parser.add_argument('-ftr', type=str, help='feature options: knn/vocab/mif/ngram/embeddings')
+    parser.add_argument('-cls', type=str, help='classifier options: bilstm/none(SVM)')
+    parser.add_argument('-ds', type=str, help='data sets options: WaseemHovy/standard/offenseval/cross')
+    parser.add_argument('-mh5', type=str, help='modelh5 for bilstm')
+    parser.add_argument('-tknzr', type=str, help='tknzr for bilstm')
     parser.add_argument('-trnp', type=str, help='trainPath')
     parser.add_argument('-tstp', type=str, help='testPath')
-    parser.add_argument('-pte', type=str, help='path_to_embs')
-    parser.add_argument('-evlt', type=str, help='traintest/cv10/none')
-    parser.add_argument('-cln', type=str, default='std', help='std/ruby')
+    parser.add_argument('-pte', type=str, help='1st embeddings path: path_to_embs')
+    parser.add_argument('-evlt', type=str, help='evaluation options: traintest/cv10/none')
     parser.add_argument('-eps', type=int, default=0, help='epochs')
     parser.add_argument('-ptc', type=int, default=0, help='patience')
     parser.add_argument('-vb', type=int, default=0, help='verbose')
     parser.add_argument('-bs', type=int, default=0, help='batch_size')
-    parser.add_argument('-rev', type=helperFunctions.str2bool, default=helperFunctions.str2bool('False'), help='reverse 3vs1')
-    parser.add_argument('-lstmTrn', type=helperFunctions.str2bool, default=helperFunctions.str2bool('False'), help='bilstm training True/False')
-    parser.add_argument('-lstmOp', type=helperFunctions.str2bool, default=helperFunctions.str2bool('False'), help='bilstm output True/False')
-    parser.add_argument('-lstmTd', type=helperFunctions.str2bool, default=helperFunctions.str2bool('False'), help='bilstm traindev True/False')
-    parser.add_argument('-lstmCV', type=helperFunctions.str2bool, default=helperFunctions.str2bool('False'), help='bilstm cv True/False')
-    parser.add_argument('-prb', type=helperFunctions.str2bool, default=helperFunctions.str2bool('False'), help='yguess_output/probabilities True/False')
-    parser.add_argument('-cnct', type=helperFunctions.str2bool, default=helperFunctions.str2bool('False'), help='concat')
-    parser.add_argument('-pool', type=str, default='max', help='pool max/average/concat')
-    parser.add_argument('-nrange', type=str, default='None', help='3to3/3to6/none')
-    parser.add_argument('-pte2', type=str, default='', help='path_to_embs2')
+    parser.add_argument('-lstmTrn', type=helperFunctions.str2bool, default=helperFunctions.str2bool('False'), help='create/train model for bilstm: True/False')
+    parser.add_argument('-lstmOp', type=helperFunctions.str2bool, default=helperFunctions.str2bool('False'), help='print bilstm output: True/False')
+    parser.add_argument('-lstmTd', type=helperFunctions.str2bool, default=helperFunctions.str2bool('False'), help='create fixed train, dev split for bilstm: True/False')
+    parser.add_argument('-lstmCV', type=helperFunctions.str2bool, default=helperFunctions.str2bool('False'), help='crossvalidation for bilstm for datasets without train/test sets: True/False')
+    parser.add_argument('-prb', type=helperFunctions.str2bool, default=helperFunctions.str2bool('False'), help='write yguess_output/probabilities: True/False')
+    parser.add_argument('-pool', type=str, default='max', help='define embeddings pooling: max/average/concat')
+    parser.add_argument('-nrange', type=str, default='None', help='for fastText embeddings with subword information options for out of vocab words: 3to3/3to6/none(ignore)')
+    parser.add_argument('-pte2', type=str, default='', help='2nd embeddings path: path_to_embs2')
     args = parser.parse_args()
 
-    source = args.src
+    source = 'Twitter'
     ftr = args.ftr
     cls = args.cls
     dataSet = args.ds
@@ -101,26 +95,24 @@ def main():
     testPath = args.tstp
     path_to_embs = args.pte
     evlt = args.evlt
-    clean = args.cln
+    clean = 'std'
     lstmTraining = args.lstmTrn
     lstmOutput = args.lstmOp
     lstmTrainDev = args.lstmTd
     lstmCV = args.lstmCV
     lstmEps = args.eps
     lstmPtc = args.ptc
-    reverse = args.rev
     vb = args.vb
     bs = args.bs
     prob = args.prb
-    concat = args.cnct
     pool = args.pool
     nrange = args.nrange
     path_to_embs2 = args.pte2
 
     TASK = 'binary'
-    #TASK = 'multi'
     
     if ftr == 'knn':
+        """ get nearest neighbors for embeddings based on keywords """
         keywords = ['woman', 'homosexual', 'black', 'gay', 'man', 'immigrant', 'immigrants', 'migrant', 'migrants', 'trans', 'gun', 'afroamerican', 'feminism', 'feminist', 'abortion', 'religion', 'god', 'trump', 'islam', 'muslim']
         helperFunctions.knn_embeddings(path_to_embs,keywords)
         exit()
@@ -131,8 +123,7 @@ def main():
 
     print('Reading in ' + source + ' training data using ' + dataSet + 'dataset...')
 
-#    IDsTrain, Xtrain, Ytrain, FNtrain, IDsTest, Xtest, Ytest, FNtest = helperFunctions.loaddata(dataSet, trainPath, testPath, cls, TASK, reverse)
-    IDsTrain, Xtrain, Ytrain, IDsTest, Xtest, Ytest = helperFunctions.loaddata(dataSet, trainPath, testPath, cls, TASK, reverse)
+    IDsTrain, Xtrain, Ytrain, IDsTest, Xtest, Ytest = helperFunctions.loaddata(dataSet, trainPath, testPath, cls, TASK)
 
 
     print('Done reading in data...')
@@ -146,10 +137,6 @@ def main():
         Xtrain = helperFunctions.clean_samples(Xtrain)
         if testPath != '':
             Xtest = helperFunctions.clean_samples(Xtest)
-    if clean == 'ruby':
-        Xtrain = helperFunctions.clean_samples_ruby(Xtrain)
-        if testPath != '':
-            Xtest = helperFunctions.clean_samples_ruby(Xtest)
 
     print(len(Xtrain), 'training samples after cleaning!')
     if Xtest:
@@ -162,17 +149,11 @@ def main():
     # Vectorizing data / Extracting features
     print('Preparing tools (vectorizer, classifier) ...')
 
-    # unweighted word uni and bigrams
-    ### This gives the stop_words may be inconsistent warning
     if source == 'Twitter':
         tokenizer = TweetTokenizer().tokenize
-    elif source == 'Reddit':
-        # tokenizer = None
-        tokenizer = ntlktokenizer
-    else:
-        tokenizer = None
 
     if ftr == 'vocab':
+        """ get vocab overlap embeddings and dataset """
         count_word = CountVectorizer(stop_words=stop_words.get_stop_words('en'), tokenizer=tokenizer)
         if testPath != None:
             word_count_vector = count_word.fit_transform(Xtrain+Xtest)
@@ -187,6 +168,7 @@ def main():
         exit()
 
     if ftr == 'mif':
+        """ most informative features for SVM using ngrams """
         print("Top 10 1-2 word n-grams features for Xtrain from:", dataSet)
         print(transformers.frequencyFilter.getKMostImportantToken(transformers.frequencyFilter(10, path_to_embs, 'word', 1, 2), Xtrain))
         print("Top 10 3-7 char n-grams features for Xtrain from:", dataSet)
@@ -199,51 +181,18 @@ def main():
         vectorizer = FeatureUnion([ ('word', count_word),
                                     ('char', count_char)])
 
-    elif ftr =='custom':
-        vectorizer = FeatureUnion([
-                               # ('tweet_length', features.TweetLength()),
-                               ('file_name', features.FileName(FNtrain, FNtest))
-                               ])
-
     elif ftr == 'embeddings':
-        # print('Getting pretrained word embeddings from {}...'.format(path_to_embs))
+        """ load embeddings, use as feature """
         embeddings, vocab = helperFunctions.load_embeddings(path_to_embs)
         if path_to_embs2 != '':
             embeddings2, vocab2 = helperFunctions.load_embeddings(path_to_embs2)
         else:
             embeddings2 = {}
-        glove_embeds = {}
-        if concat:
-            if path_to_embs == glove_embeds_path:
-                glove_embeds = embeddings
-            else:
-                glove_embeds, glove_vocab = helperFunctions.load_embeddings(glove_embeds_path)
         print('Done')
-        vectorizer = features.Embeddings(embeddings, glove_embeds, nrange, path_to_embs, pool='max')
-#        vectorizer = FeatureUnion([
-#                                   ('word_embeds', features.Embeddings(embeddings, glove_embeds, pool=pool)),
-#                                   # ('tweet_length', features.TweetLength()),
-#                                   ('file_name', features.FileName(FNtrain, FNtest))
-#                                   ])
-
-    elif ftr == 'embeddings+ngram':
-        count_word = CountVectorizer(ngram_range=(1,2), stop_words=stop_words.get_stop_words('en'), tokenizer=tokenizer)
-        count_char = CountVectorizer(analyzer='char', ngram_range=(3,7))
-        # path_to_embs = 'embeddings/model_reset_random.bin'
-        print('Getting pretrained word embeddings from {}...'.format(path_to_embs))
-        embeddings, vocab = helperFunctions.load_embeddings(path_to_embs)
-        glove_embeds = {}
-        if concat:
-            if path_to_embs == glove_embeds_path:
-                glove_embeds = embeddings
-            else:
-                glove_embeds, glove_vocab = helperFunctions.load_embeddings(glove_embeds_path)
-        print('Done')
-        vectorizer = FeatureUnion([ ('word', count_word),
-                                    ('char', count_char),
-                                    ('word_embeds', features.Embeddings(embeddings, glove_embeds, nrange, path_to_embs, pool='max'))])
+        vectorizer = features.Embeddings(embeddings, glove_embeds, nrange, path_to_embs, pool)
 
     if cls == 'bilstm':
+        """ calls for BiLSTM, uses embeddings as feature """
         from BiLSTM import biLSTM
         if lstmTrainDev:
             Xtrain, Xtest, Ytrain, Ytest = train_test_split(Xtrain, Ytrain, test_size=0.33, random_state=seed)
@@ -255,18 +204,8 @@ def main():
 
     # Set up SVM classifier with unbalanced class weights
     if TASK == 'binary' and cls != 'bilstm':
-        # cl_weights_binary = None
         cl_weights_binary = {'NOT':1/nonOffensiveRatio, 'OFF':1/offensiveRatio}
-        # clf = LinearSVC(class_weight=cl_weights_binary, random_state=1337)
         clf = SVC(kernel='linear', probability=True, class_weight=cl_weights_binary, random_state=seed)
-    elif TASK == 'multi':
-        # cl_weights_multi = None
-        cl_weights_multi = {'OTHER':0.5,
-                            'ABUSE':3,
-                            'INSULT':3,
-                            'PROFANITY':4}
-        # clf = LinearSVC(class_weight=cl_weights_multi, random_state=1337)
-        clf = SVC(kernel='linear', class_weight=cl_weights_multi, probability=True, random_state=seed)
 
     if cls != 'bilstm':
         classifier = Pipeline([
@@ -301,8 +240,6 @@ def main():
             Y_train, Y_test = Ytrain[train_index], Ytrain[test_index]
 
             classifier.fit(X_train,Y_train)
-            if ftr == 'ngram':
-                helperFunctions.print_top10(vectorizer, clf, clf.classes_)
             Yguess = classifier.predict(X_test)
 
             accuracy += accuracy_score(Y_test, Yguess)
@@ -337,10 +274,6 @@ def main():
         print('recall_score: {}'.format(recall / 10))
         print('f1_score: {}'.format(fscore / 10))
 
-        # results = (cross_validate(classifier, Xtrain, Ytrain,cv=10, verbose=1))
-        # # print(results)
-        # print(sum(results['test_score']) / 10)
-
         print('\n\nDone, used the following parameters:')
         print('train: {}'.format(trainPath))
         if ftr != 'ngram':
@@ -351,10 +284,7 @@ def main():
     elif evlt == 'traintest':
         if cls != 'bilstm':
             classifier.fit(Xtrain,Ytrain)
-            if ftr == 'ngram':
-                helperFunctions.print_top10(vectorizer, clf, clf.classes_)
             Yguess = classifier.predict(Xtest)
-#            print(classifier.show_most_informative_features(20))
         print('train test results:')
         print(accuracy_score(Ytest, Yguess))
         print(precision_recall_fscore_support(Ytest, Yguess, average='macro'))

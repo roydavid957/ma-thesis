@@ -21,8 +21,6 @@ from sklearn.model_selection import train_test_split
 
 seed = 1337
 np.random.seed(seed)
-# Import Files
-
 
 
 class AttentionWithContext(Layer):
@@ -80,20 +78,19 @@ class AttentionWithContext(Layer):
         return None
 
     def call(self, x, mask=None):
-        # (x, 40, 300) x (300, 1)
-        multData =  K.dot(x, self.kernel) # (x, 40, 1)
-        multData = K.squeeze(multData, -1) # (x, 40)
-        multData = multData + self.b # (x, 40) + (40,)
+        multData =  K.dot(x, self.kernel)
+        multData = K.squeeze(multData, -1)
+        multData = multData + self.b
 
-        multData = K.tanh(multData) # (x, 40)
+        multData = K.tanh(multData)
 
-        multData = multData * self.u # (x, 40) * (40, 1) => (x, 1)
-        multData = K.exp(multData) # (X, 1)
+        multData = multData * self.u
+        multData = K.exp(multData)
 
         # apply mask after the exp. will be re-normalized next
         if mask is not None:
-            mask = K.cast(mask, K.floatx()) #(x, 40)
-            multData = mask*multData #(x, 40) * (x, 40, )
+            mask = K.cast(mask, K.floatx())
+            multData = mask*multData
 
         # in some cases especially in the early stages of training the sum may be almost zero
         # and this results in NaN's. A workaround is to add a very small positive number ε to the sum.
@@ -156,60 +153,6 @@ def training_biLSTM(Xtrain, Ytrain, Xtest, Ytest, embeddings_index, tknzr, model
                     embedding_matrix[i] = embedding_vector
             except:
                 pass
-# for additional look up for subword vectors
-    """
-        if embedding_vector is None:
-        
-            if nrange == '3to3':
-                if len(word) > 3:
-                    first_tri = word[:3]
-                    last_tri = word[-3:]
-                    embedding_vector1 = embeddings_index.get(first_tri)
-                    embedding_vector2 = embeddings_index.get(last_tri)
-                    if embedding_vector1 is not None:
-                        embedding_matrix[i] = embedding_vector1
-#                        if embedding_vector2 is not None:
-#                            embedding_matrix[i].append(embedding_vector2)
-                    elif embedding_vector2 is not None:
-                        embedding_matrix[i] = embedding_vector2
-            
-            if nrange == '3to6':
-                if len(word) > 3:
-                    tri_grams = [word.lower()[i:i+3] for i in range(len(word.lower())-1)]
-                    for gram in tri_grams:
-                        if len(gram) == 3:
-                            embedding_vector = embeddings_index.get(gram.lower())
-                            if embedding_vector is not None:
-                                embedding_matrix[i] = embedding_vector
-                                break
-                
-                elif len(word) > 4:
-                    tri_grams = [word.lower()[i:i+4] for i in range(len(word.lower())-1)]
-                    for gram in tri_grams:
-                        if len(gram) == 4:
-                            embedding_vector = embeddings_index.get(gram.lower())
-                            if embedding_vector is not None:
-                                embedding_matrix[i] = embedding_vector
-                                break
-                
-                elif len(word) > 5:
-                    tri_grams = [word.lower()[i:i+5] for i in range(len(word.lower())-1)]
-                    for gram in tri_grams:
-                        if len(gram) == 5:
-                            embedding_vector = embeddings_index.get(gram.lower())
-                            if embedding_vector is not None:
-                                embedding_matrix[i] = embedding_vector
-                                break
-                
-                elif len(word) > 6:
-                    tri_grams = [word.lower()[i:i+6] for i in range(len(word.lower())-1)]
-                    for gram in tri_grams:
-                        if len(gram) == 6:
-                            embedding_vector = embeddings_index.get(gram.lower())
-                            if embedding_vector is not None:
-                                embedding_matrix[i] = embedding_vector
-                                break
-    """
     print('Loaded embeddings')
 
     ### Setting up model
@@ -297,8 +240,6 @@ def output_biLSTM(Xtrain, Ytrain, Xtest, Ytest, tknzr, modelh5, cv, c):
     print(set(yguess))
 
     print('Predictions made! returning output')
-    # accuracy = accuracy_score(Ytest, yguess)
-    # precision, recall, f1score, support = precision_recall_fscore_support(Ytest, yguess, average='macro')
     report = classification_report(Ytest, yguess)
     print(report)
 
@@ -370,7 +311,7 @@ def biLSTM(Xtrain, Ytrain, Xtest, Ytest, training, output, embeddings_index, tkn
         exit()
 
     if output:
-        Ytest, yguess = output_biLSTM(Xtrain, Ytrain, Xtest, Ytest, tknzr, modelh5, cv, 0) # c=0 cuz no CV, shape=851 placeholder
+        Ytest, yguess = output_biLSTM(Xtrain, Ytrain, Xtest, Ytest, tknzr, modelh5, cv, 0)
         return Ytest, yguess
 
     return True
