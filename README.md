@@ -6,12 +6,17 @@ twitter.py: used for scraping the data, normalizing the messages, counting the d
 
 jsd.py: used for calculating the Jensen Shannon Divergence scores between data sets.
 
-SVM_original.py: used as the main program, contains two LinearSVC models: one based on ngrams using a CountVectorizer, the other uses embeddings. Calls the BiLSTM. (Original version: https://github.com/malvinanissim/germeval-rug) (Version used and modified: https://github.com/BalintHompot/RUG_Offenseval)
+SVM_original.py: used as the main program, contains two LinearSVC models: one based on char and word ngrams using a CountVectorizer, the other uses embeddings. Calls the BiLSTM.
 
-helperFunctions.py: contains small helpful functions for SVM_original.py. (Original version: https://github.com/BalintHompot/RUG_Offenseval)
+helperFunctions.py: contains small helpful functions for SVM_original.py, such as read functions for the data sets and embeddings.
 
-features.py: contains features used in SVM_original.py. (Original version: https://github.com/malvinanissim/germeval-rug) (Version used and modified: https://github.com/BalintHompot/RUG_Offenseval)
+features.py: contains features used in SVM_original.py.
 
-transformers.py: containes features used in SVM_original.py. (Original version: https://github.com/malvinanissim/germeval-rug)  (Version used and modified: https://github.com/BalintHompot/RUG_Offenseval)
+transformers.py: containes transformers used in SVM_original.py.
 
-BiLSTM.py: contains the BiLSTM model using embeddings. (Original version: https://bitbucket.org/grunn2018/sharedhate_repo/src/master/)
+BiLSTM.py: contains the BiLSTM model using embeddings.
+
+Most of these scripts are re-used and modified, original versions from:
+-https://github.com/malvinanissim/germeval-rug
+-https://github.com/BalintHompot/RUG_Offenseval
+-https://bitbucket.org/grunn2018/sharedhate_repo/src/master/
