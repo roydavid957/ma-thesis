@@ -2,7 +2,7 @@
 
 Python programs used for ma-thesis on: Politically Oriented Embeddings for Abusive Language Detection
 
-twitter.py: used for scraping the data, normalizing the messages, counting the distributions, shuffling the data.
+twitter.py: used for scraping the data, normalizing the messages, counting the distribution of the keywords, shuffling the data.
 
 jsd.py: used for calculating the Jensen Shannon Divergence scores between data sets.
 
@@ -15,6 +15,8 @@ features.py: contains features used in SVM_original.py.
 transformers.py: containes transformers used in SVM_original.py.
 
 BiLSTM.py: contains the BiLSTM model using embeddings.
+
+
 
 Most of these scripts are re-used and modified, original versions from:
 
