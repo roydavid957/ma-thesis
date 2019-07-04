@@ -17,6 +17,9 @@ transformers.py: containes transformers used in SVM_original.py.
 BiLSTM.py: contains the BiLSTM model using embeddings.
 
 Most of these scripts are re-used and modified, original versions from:
+
 -https://github.com/malvinanissim/germeval-rug
+
 -https://github.com/BalintHompot/RUG_Offenseval
+
 -https://bitbucket.org/grunn2018/sharedhate_repo/src/master/
