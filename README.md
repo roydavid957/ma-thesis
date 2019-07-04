@@ -1,7 +1,6 @@
 # ma-thesis RUG IK: 
 ## Politically Oriented Embeddings for Abusive Language Detection
 
-Python programs used for ma-thesis on: Politically Oriented Embeddings for Abusive Language Detection
 Structure:
 - **prog** contains python programs used for ma-thesis on: Politically Oriented Embeddings for Abusive Language Detection:
   - twitter.py
